@@ -1,9 +1,13 @@
 version: 1
 plugins:
   extractors:
-    - name: tap-google-ad-manager
-      namespace: tap_google_ad_manager
-      executable: tap-google-ad-manager.sh
+    - name: tap-on24
+      namespace: tap_on24
+      executable: tap-on24
       settings:
-        - name: key_file_path
-        - name: network_id
+        - name: client_id
+        - name: access_token_key
+        - name: access_token_secret
+        - name: start_date
+        - name: end_date
+        - name: items_per_page
