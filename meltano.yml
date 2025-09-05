@@ -1,0 +1,9 @@
+version: 1
+plugins:
+  extractors:
+    - name: tap-google-ad-manager
+      namespace: tap_google_ad_manager
+      executable: tap-google-ad-manager.sh
+      settings:
+        - name: key_file_path
+        - name: network_id
