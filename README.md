@@ -1,6 +1,6 @@
-# tap-google-ad-manager
+# tap-on24
 
-`tap-google-ad-manager` is a Singer tap designed for extracting data from Google Ad Manager.
+`tap-on24` is a Singer tap designed for extracting event data from the ON24 Webinar Platform using their REST API.
 
 This tap is built using the [Meltano Tap SDK](https://sdk.meltano.com) for Singer Taps.
 
@@ -11,7 +11,7 @@ This tap is built using the [Meltano Tap SDK](https://sdk.meltano.com) for Singe
 Install the tap using the following command:
 
 ```bash
-pipx install git+https://github.com/The-Daily-Upside/tap-google-ad-manager.git
+pipx install git+https://github.com/The-Daily-Upside/tap-on24.git
 ```
 
 ---
@@ -20,24 +20,58 @@ pipx install git+https://github.com/The-Daily-Upside/tap-google-ad-manager.git
 
 ### Supported Configuration Options
 
-The following configuration options are now supported:
+The following configuration options are supported:
 
-* **`service_account_key_file`**: The path to your Google Service Account key JSON file.
-* **`network_id`**: The network ID for your Google Ad Manager account.
-* **`reports`**: A dictionary of report configurations, where each key is a report name and the value is the report definition.
+* **`client_id`**: Your ON24 client ID.
+* **`access_token_key`**: Your ON24 API access token key.
+* **`access_token_secret`**: Your ON24 API access token secret.
+* **`start_date`**: (Optional) Start date for event filtering (YYYY-MM-DD).
+* **`end_date`**: (Optional) End date for event filtering (YYYY-MM-DD).
+* **`items_per_page`**: (Optional) Number of events per page (default: 100).
 
-> **Note**: Service Accounts are used instead of OAuth for authentication. Ensure you have downloaded the JSON key file for your Service Account from the Google Cloud Console.
+### Example meltano.yml
 
-### How Report Execution Works
+```yaml
+plugins:
+  extractors:
+    - name: tap-on24
+      namespace: tap_on24
+      executable: tap-on24
+      settings:
+        client_id: "YOUR_CLIENT_ID"
+        access_token_key: "YOUR_ACCESS_TOKEN_KEY"
+        access_token_secret: "YOUR_ACCESS_TOKEN_SECRET"
+        start_date: "2025-01-01"
+        end_date: "2025-09-01"
+        items_per_page: 100
+```
 
-Reports are defined in the `reports` section of the configuration. On each tap run:
+---
 
-1. The tap checks if the configured reports exist in Google Ad Manager.
-2. If they do not exist, it programmatically creates them.
-3. The tap then runs each report and waits for its completion.
-4. Once completed, results are fetched using the `ReportResultsStream` and loaded into the target system.
+## Usage
 
-This ensures all reporting is centrally defined and reliably refreshed on each tap execution.
+Run the tap to extract events from ON24:
+
+```bash
+meltano run tap-on24
+```
+
+---
+
+## Output
+
+The tap will output ON24 event records, matching the ON24 event API schema.
+
+---
+
+## Authentication
+
+Authentication is handled via custom HTTP headers:
+
+* `accessTokenKey`: Your ON24 API access token key
+* `accessTokenSecret`: Your ON24 API access token secret
+
+The `client_id` is included in the API request URL path.
 
 ### Example Configuration File
 
