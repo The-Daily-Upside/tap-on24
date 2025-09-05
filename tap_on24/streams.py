@@ -1,72 +1,82 @@
-import time
-import json
 from typing import Any, Dict, Optional, Iterable
-import requests
-from json import JSONDecodeError
-from tap_google_ad_manager.client import GoogleAdManagerStream
 from singer_sdk import typing as th
+from tap_on24.client import ON24Client
 
-# Constants for retry logic
-MAX_RETRIES = 5
-RETRY_DELAY = 2  # seconds
-
-class OrdersStream(GoogleAdManagerStream):
-    name = "orders"
-    path = "networks/{network_id}/orders"
-    primary_keys = ["orderId"]
-    replication_key = "updateTime"
+class ON24EventsStream:
+    name = "events"
+    primary_keys = ["eventid"]
+    replication_key = "lastupdated"
     schema = th.PropertiesList(
-        th.Property("orderId", th.StringType),
-        th.Property("displayName", th.StringType),
-        th.Property("startTime", th.DateTimeType),
-        th.Property("endTime", th.DateTimeType),
-        th.Property("updateTime", th.DateTimeType),
-        th.Property("archived", th.BooleanType),
-        th.Property("programmatic", th.BooleanType),
-        th.Property("trafficker", th.StringType),
-        th.Property("advertiser", th.StringType),
-        th.Property("agency", th.StringType),
-        th.Property("currencyCode", th.StringType),
-        th.Property("notes", th.StringType),
-        th.Property("poNumber", th.StringType),
-        th.Property("status", th.StringType),
-        th.Property("salesperson", th.StringType),
-        th.Property("secondarySalespeople", th.ArrayType(th.StringType)),
-        th.Property("secondaryTraffickers", th.ArrayType(th.StringType)),
-        th.Property("appliedLabels", th.ArrayType(th.StringType)),
-        th.Property("effectiveTeams", th.ArrayType(th.StringType)),
-        th.Property(
-            "customFieldValues",
-            th.ArrayType(
-                th.ObjectType(
-                    th.Property("customField", th.StringType),
-                    th.Property("value", th.StringType)
-                )
-            )
-        ),
+        th.Property("eventid", th.IntegerType),
+        th.Property("clientid", th.IntegerType),
+        th.Property("goodafter", th.StringType),
+        th.Property("isactive", th.BooleanType),
+        th.Property("regrequired", th.BooleanType),
+        th.Property("description", th.StringType),
+        th.Property("promotionalsummary", th.StringType),
+        th.Property("regnotificationrequired", th.BooleanType),
+        th.Property("displaytimezonecd", th.StringType),
+        th.Property("eventtype", th.StringType),
+        th.Property("category", th.StringType),
+        th.Property("createtimestamp", th.StringType),
+        th.Property("localelanguagecd", th.StringType),
+        th.Property("localecountrycd", th.StringType),
+        th.Property("lastmodified", th.StringType),
+        th.Property("lastupdated", th.StringType),
+        th.Property("iseliteexpired", th.StringType),
+        th.Property("application", th.StringType),
+        th.Property("livestart", th.StringType),
+        th.Property("liveend", th.StringType),
+        th.Property("archivestart", th.StringType),
+        th.Property("archiveend", th.StringType),
+        th.Property("audienceurl", th.StringType),
+        th.Property("contenttype", th.StringType),
+        th.Property("campaigncode", th.StringType),
+        th.Property("eventlocation", th.StringType),
+        th.Property("createdby", th.StringType),
+        th.Property("ishybridevent", th.BooleanType),
+        th.Property("istestevent", th.BooleanType),
+        th.Property("eventprofile", th.StringType),
+        th.Property("streamtype", th.StringType),
+        th.Property("audiencekey", th.StringType),
+        th.Property("extaudienceurl", th.StringType),
+        th.Property("reporturl", th.StringType),
+        th.Property("uploadurl", th.StringType),
+        th.Property("pmurl", th.StringType),
+        th.Property("previewurl", th.StringType),
     ).to_dict()
 
-    def parse_response(self, response: requests.Response) -> Iterable[dict]:
-        yield from response.json().get("orders", [])
+    def __init__(self, tap):
+        self.tap = tap
+        self.client = ON24Client(
+            tap.config.get("client_id"),
+            tap.config.get("access_token_key"),
+            tap.config.get("access_token_secret")
+        )
 
-    def get_url_params(self, context: Optional[dict], next_page_token: Optional[Any]) -> Dict[str, Any]:
-        return {"page_token": next_page_token} if next_page_token else {}
+    def get_records(self) -> Iterable[Dict[str, Any]]:
+        start_date = self.tap.config.get("start_date")
+        end_date = self.tap.config.get("end_date")
+        items_per_page = int(self.tap.config.get("items_per_page", 100))
+        page_offset = 0
+        while True:
+            data = self.client.get_events(start_date, end_date, items_per_page, page_offset)
+            events = data.get("events", [])
+            for event in events:
+                yield event
+            if len(events) < items_per_page:
+                break
+            page_offset += 1
 
-    def get_next_page_token(self, response: requests.Response, previous_token: Optional[Any]) -> Optional[Any]:
-        return response.json().get("nextPageToken")
+# All legacy classes and code below this line are removed for ON24 tap
+
+# All legacy classes and code below this line are removed for ON24 tap
+
+# All legacy classes and code below this line are removed for ON24 tap
+
+# All legacy classes and code below this line are removed for ON24 tap
 
 
-class BaseSimpleStream(GoogleAdManagerStream):
-    primary_keys = ["name"]
-
-    def parse_response(self, response: requests.Response) -> Iterable[dict]:
-        return response.json().get(self.name, [])
-
-    def get_url_params(self, context: Optional[dict], next_page_token: Optional[Any]) -> Dict[str, Any]:
-        return {"page_token": next_page_token} if next_page_token else {}
-
-    def get_next_page_token(self, response: requests.Response, previous_token: Optional[Any]) -> Optional[Any]:
-        return response.json().get("nextPageToken")
 
 
 class PlacementsStream(BaseSimpleStream):

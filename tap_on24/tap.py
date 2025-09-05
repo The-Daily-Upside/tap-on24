@@ -1,36 +1,22 @@
-"""Google Ad Manager tap class."""
+"""ON24 tap class."""
 
 from singer_sdk import Tap
-from singer_sdk.typing import PropertiesList, Property, StringType, ObjectType
-from tap_google_ad_manager.streams import (
-    OrdersStream,
-    PlacementsStream,
-    ReportsStream,
-    ReportResultsStream,
-)
+from singer_sdk.typing import PropertiesList, Property, StringType, IntegerType, BooleanType
+from tap_on24.streams import ON24EventsStream
 
-class TapGoogleAdManager(Tap):
-    """Singer tap for Google Ad Manager."""
-    name = "tap-google-ad-manager"
+class TapON24(Tap):
+    """Singer tap for ON24 Webinar Platform."""
+    name = "tap-on24"
 
     config_jsonschema = PropertiesList(
-        Property("key_file_path", StringType, required=True),
-        Property("network_id", StringType, required=True),
-        Property(
-            "reports",
-            ObjectType(
-                additional_properties=True
-            ),
-            required=True,
-        ),
+        Property("client_id", StringType, required=True),
+        Property("access_token_key", StringType, required=True),
+        Property("access_token_secret", StringType, required=True),
+        Property("start_date", StringType),
+        Property("end_date", StringType),
+        Property("items_per_page", IntegerType, default=100),
     ).to_dict()
-    
+
     def discover_streams(self):
         """Return a list of discovered streams."""
-        key_file_path = self.config.get("key_file_path")
-        return [
-            OrdersStream(self, key_file_path),
-            PlacementsStream(self, key_file_path),
-            ReportsStream(self, key_file_path),
-            ReportResultsStream(self, key_file_path),
-        ]
+        return [ON24EventsStream(self)]
