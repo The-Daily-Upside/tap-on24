@@ -1,1 +1,1 @@
-"""Google Ad Manager tap package."""
+"""ON24 tap package."""
