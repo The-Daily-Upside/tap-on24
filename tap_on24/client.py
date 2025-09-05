@@ -26,8 +26,6 @@ class ON24Client:
         }
         if start_date:
             params["startDate"] = start_date
-        if end_date:
-            params["endDate"] = end_date
         response = requests.get(url, headers=self.get_headers(), params=params)
         response.raise_for_status()
         return response.json()
