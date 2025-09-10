@@ -8,6 +8,5 @@ plugins:
         - name: client_id
         - name: access_token_key
         - name: access_token_secret
-        - name: start_date
-        - name: end_date
+        - name: on24_start_date
         - name: items_per_page
