@@ -1,0 +1,5 @@
+.DS_Store
+venv
+build/*
+build/
+tap_on24.egg-info/*
