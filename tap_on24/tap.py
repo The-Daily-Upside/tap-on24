@@ -2,7 +2,7 @@
 
 from singer_sdk import Tap
 from singer_sdk.typing import PropertiesList, Property, StringType, IntegerType, BooleanType
-from tap_on24.streams import ON24EventsStream
+from tap_on24.streams import ON24EventsStream, ON24AttendeesStream
 
 class TapON24(Tap):
     """Singer tap for ON24 Webinar Platform."""
@@ -18,4 +18,4 @@ class TapON24(Tap):
 
     def discover_streams(self):
         """Return a list of discovered streams."""
-        return [ON24EventsStream(self)]
+        return [ON24EventsStream(self), ON24AttendeesStream(self)]

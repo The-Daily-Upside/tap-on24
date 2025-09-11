@@ -29,3 +29,13 @@ class ON24Client:
         response = requests.get(url, headers=self.get_headers(), params=params)
         response.raise_for_status()
         return response.json()
+    
+    def get_attendees(self, event_id: int, items_per_page: int = 100, page_offset: int = 0) -> Dict[str, Any]:
+        url = f"{self.BASE_URL.format(client_id=self.client_id)}/{event_id}/attendee"
+        params = {
+            "itemsPerPage": items_per_page,
+            "pageOffset": page_offset
+        }
+        response = requests.get(url, headers=self.get_headers(), params=params)
+        response.raise_for_status()
+        return response.json()

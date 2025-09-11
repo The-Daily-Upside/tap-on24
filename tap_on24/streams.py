@@ -1,4 +1,3 @@
-
 from typing import Any, Dict, Optional, Iterable
 from singer_sdk import typing as th
 from singer_sdk.streams import Stream
@@ -68,3 +67,219 @@ class ON24EventsStream(Stream):
             if len(events) < items_per_page:
                 break
             page_offset += 1
+
+class ON24AttendeesStream(Stream):
+    depends_on_streams = ["events"]
+    name = "attendees"
+    primary_keys = ["eventid", "eventuserid"]
+    schema = th.PropertiesList(
+        th.Property("eventid", th.IntegerType),
+        th.Property("email", th.StringType),
+        th.Property("eventuserid", th.IntegerType),
+        th.Property("exteventusercd", th.StringType),
+        th.Property("userstatus", th.StringType),
+        th.Property("isblocked", th.StringType),
+        th.Property("engagementscore", th.NumberType),
+        th.Property("liveminutes", th.IntegerType),
+        th.Property("liveviewed", th.IntegerType),
+        th.Property("firstliveactivity", th.StringType),
+        th.Property("lastliveactivity", th.StringType),
+        th.Property("archiveminutes", th.IntegerType),
+        th.Property("archiveviewed", th.IntegerType),
+        th.Property("firstarchiveactivity", th.StringType),
+        th.Property("lastarchiveactivity", th.StringType),
+        th.Property("askedquestions", th.IntegerType),
+        th.Property("resourcesdownloaded", th.IntegerType),
+        th.Property("answeredpolls", th.IntegerType),
+        th.Property("answeredsurveys", th.IntegerType),
+        th.Property("answeredsurveyquestions", th.IntegerType),
+        th.Property("launchmode", th.StringType),
+        th.Property("userprofileurl", th.StringType),
+        th.Property("campaigncode", th.StringType),
+        th.Property("sourcecampaigncode", th.StringType),
+        th.Property("sourceeventid", th.IntegerType),
+        th.Property("cumulativeliveminutes", th.IntegerType),
+        th.Property("cumulativearchiveminutes", th.IntegerType),
+        th.Property("partnerref", th.StringType),
+        th.Property("attendancepartnerref", th.StringType),
+        th.Property("attendeesessions", th.IntegerType),
+        th.Property("livemediaplayerminutes", th.IntegerType),
+        th.Property("archivemediaplayerminutes", th.IntegerType),
+        th.Property("questions", th.ArrayType(th.ObjectType(
+            th.Property("questionid", th.IntegerType),
+            th.Property("createtimestamp", th.StringType),
+            th.Property("content", th.StringType),
+            th.Property("foldername", th.StringType),
+        ))),
+        th.Property("polls", th.ArrayType(th.ObjectType(
+            th.Property("pollid", th.IntegerType),
+            th.Property("pollsubmittedtimestamp", th.StringType),
+            th.Property("pollquestionid", th.IntegerType),
+            th.Property("pollquestion", th.StringType),
+            th.Property("pollanswers", th.ArrayType(th.StringType)),
+            th.Property("pollanswersdetail", th.ArrayType(th.ObjectType(
+                th.Property("answercode", th.StringType),
+                th.Property("answer", th.StringType),
+            ))),
+        ))),
+        th.Property("resources", th.ArrayType(th.ObjectType(
+            th.Property("resourceid", th.IntegerType),
+            th.Property("resourceviewed", th.StringType),
+            th.Property("resourceviewedtimestamp", th.StringType),
+        ))),
+        th.Property("certificationwidgetresult", th.StringType),
+        th.Property("certificationcredit", th.StringType),
+        th.Property("certificationtimestamp", th.StringType),
+        th.Property("certifications", th.ArrayType(th.ObjectType(
+            th.Property("certificationid", th.IntegerType),
+            th.Property("certificationname", th.StringType),
+            th.Property("certificationcredit", th.StringType),
+            th.Property("certificationurl", th.StringType),
+            th.Property("certificationtimestamp", th.StringType),
+            th.Property("certificationresult", th.StringType),
+        ))),
+        th.Property("democonversions", th.ArrayType(th.ObjectType(
+            th.Property("widgetid", th.IntegerType),
+            th.Property("widgetname", th.StringType),
+            th.Property("widgettype", th.StringType),
+            th.Property("widgetaction", th.StringType),
+            th.Property("widgetsubmittedtimestamp", th.StringType),
+        ))),
+        th.Property("meetingconversions", th.ArrayType(th.ObjectType(
+            th.Property("widgetid", th.IntegerType),
+            th.Property("widgetname", th.StringType),
+            th.Property("widgettype", th.StringType),
+            th.Property("widgetaction", th.StringType),
+            th.Property("widgetsubmittedtimestamp", th.StringType),
+        ))),
+        th.Property("contactus", th.ArrayType(th.ObjectType(
+            th.Property("widgetid", th.IntegerType),
+            th.Property("widgetname", th.StringType),
+            th.Property("widgettype", th.StringType),
+            th.Property("widgetaction", th.StringType),
+            th.Property("widgetsubmittedtimestamp", th.StringType),
+        ))),
+        th.Property("getpricing", th.ArrayType(th.ObjectType(
+            th.Property("widgetid", th.IntegerType),
+            th.Property("widgetname", th.StringType),
+            th.Property("widgettype", th.StringType),
+            th.Property("widgetaction", th.StringType),
+            th.Property("widgetsubmittedtimestamp", th.StringType),
+        ))),
+        th.Property("freetrial", th.ArrayType(th.ObjectType(
+            th.Property("widgetid", th.IntegerType),
+            th.Property("widgetname", th.StringType),
+            th.Property("widgettype", th.StringType),
+            th.Property("widgetaction", th.StringType),
+            th.Property("widgetsubmittedtimestamp", th.StringType),
+        ))),
+        th.Property("drift", th.ArrayType(th.ObjectType(
+            th.Property("widgetid", th.IntegerType),
+            th.Property("widgetname", th.StringType),
+            th.Property("widgettype", th.StringType),
+            th.Property("widgetaction", th.StringType),
+            th.Property("widgetsubmittedtimestamp", th.StringType),
+        ))),
+        th.Property("locationvisits", th.ArrayType(th.ObjectType(
+            th.Property("locationid", th.IntegerType),
+            th.Property("locationcode", th.StringType),
+            th.Property("locationname", th.StringType),
+            th.Property("sponsorid", th.IntegerType),
+            th.Property("sponsorname", th.StringType),
+            th.Property("visits", th.IntegerType),
+            th.Property("visitsduration", th.IntegerType),
+            th.Property("cumulativevisitsduration", th.IntegerType),
+        ))),
+        th.Property("surveys", th.ArrayType(th.ObjectType(
+            th.Property("surveyid", th.StringType),
+            th.Property("surveysubmittedtimestamp", th.StringType),
+            th.Property("surveyquestions", th.ArrayType(th.ObjectType(
+                th.Property("surveyquestionid", th.IntegerType),
+                th.Property("surveyquestion", th.StringType),
+                th.Property("questioncode", th.StringType),
+                th.Property("primaryquestioncode", th.StringType),
+                th.Property("surveyanswers", th.ArrayType(th.StringType)),
+                th.Property("surveyanswersdetail", th.ArrayType(th.ObjectType(
+                    th.Property("answercode", th.StringType),
+                    th.Property("answer", th.StringType),
+                ))),
+            ))),
+        ))),
+    ).to_dict()
+
+    def __init__(self, tap):
+        super().__init__(tap)
+        self.client = ON24Client(
+            tap.config.get("client_id"),
+            tap.config.get("access_token_key"),
+            tap.config.get("access_token_secret")
+        )
+
+    def get_records(self, context: Optional[dict]) -> Iterable[Dict[str, Any]]:
+        # Get all eventids from the events stream
+        events_stream = self._tap.streams["events"]
+        for event in events_stream.get_records(context):
+            eventid = event["eventid"]
+            items_per_page = int(self.config.get("items_per_page", 100))
+            page_offset = 0
+            import logging
+            import time
+            MAX_RETRIES = 3
+            while True:
+                retries = 0
+                while retries < MAX_RETRIES:
+                    try:
+                        data = self.client.get_attendees(eventid, items_per_page, page_offset)
+                        break
+                    except Exception as e:
+                        # Handle 403 Forbidden
+                        if hasattr(e, 'response') and getattr(e.response, 'status_code', None) == 403:
+                            logging.warning(f"403 Forbidden for event {eventid} page {page_offset}, stopping pagination.")
+                            return
+                        # Handle connection errors
+                        elif 'Connection aborted' in str(e) or 'RemoteDisconnected' in str(e):
+                            retries += 1
+                            logging.warning(f"Connection error for event {eventid} page {page_offset}, retry {retries}/{MAX_RETRIES}.")
+                            time.sleep(2 * retries)
+                        else:
+                            logging.error(f"Unexpected error for event {eventid} page {page_offset}: {e}")
+                            return
+                else:
+                    logging.error(f"Max retries exceeded for event {eventid} page {page_offset}, skipping page.")
+                    break
+                attendees = data.get("attendees", [])
+                if not attendees:
+                    break
+                for attendee in attendees:
+                    attendee["eventid"] = int(eventid)
+                    if "eventuserid" in attendee and attendee["eventuserid"] is not None:
+                        try:
+                            attendee["eventuserid"] = int(attendee["eventuserid"])
+                        except (ValueError, TypeError):
+                            attendee["eventuserid"] = None
+
+                    def cast_ids(obj):
+                        if isinstance(obj, dict):
+                            for k, v in obj.items():
+                                # Cast *_id fields to int
+                                if k.endswith("id") and v is not None:
+                                    try:
+                                        obj[k] = int(v)
+                                    except (ValueError, TypeError):
+                                        obj[k] = None
+                                # Recurse into lists and dicts, but do NOT convert pollanswers/surveyanswers
+                                elif isinstance(v, list) and k not in ("pollanswers", "surveyanswers"):
+                                    for item in v:
+                                        cast_ids(item)
+                                elif isinstance(v, dict):
+                                    cast_ids(v)
+                        elif isinstance(obj, list):
+                            for item in obj:
+                                cast_ids(item)
+
+                    # Cast *_id fields to int, preserve pollanswers/surveyanswers as arrays
+                    cast_ids(attendee)
+                    yield attendee
+                if len(attendees) < items_per_page:
+                    break
+                page_offset += 1
