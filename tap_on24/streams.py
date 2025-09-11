@@ -69,7 +69,6 @@ class ON24EventsStream(Stream):
             page_offset += 1
 
 class ON24AttendeesStream(Stream):
-    depends_on_streams = ["events"]
     name = "attendees"
     primary_keys = ["eventid", "eventuserid"]
     schema = th.PropertiesList(
@@ -281,5 +280,139 @@ class ON24AttendeesStream(Stream):
                     cast_ids(attendee)
                     yield attendee
                 if len(attendees) < items_per_page:
+                    break
+                page_offset += 1
+
+class ON24RegistrantsStream(Stream):
+    name = "registrants"
+    primary_keys = ["eventid", "eventuserid"]
+    schema = th.PropertiesList(
+        th.Property("eventid", th.IntegerType),
+        th.Property("eventuserid", th.IntegerType),
+        th.Property("firstname", th.StringType),
+        th.Property("lastname", th.StringType),
+        th.Property("email", th.StringType),
+        th.Property("company", th.StringType),
+        th.Property("jobtitle", th.StringType),
+        th.Property("addressstreet1", th.StringType),
+        th.Property("addressstreet2", th.StringType),
+        th.Property("city", th.StringType),
+        th.Property("state", th.StringType),
+        th.Property("zip", th.StringType),
+        th.Property("country", th.StringType),
+        th.Property("workphone", th.StringType),
+        th.Property("jobfunction", th.StringType),
+        th.Property("companyindustry", th.StringType),
+        th.Property("companysize", th.StringType),
+        th.Property("partnerref", th.StringType),
+        th.Property("std1", th.StringType),
+        th.Property("std2", th.StringType),
+        th.Property("std3", th.StringType),
+        th.Property("std4", th.StringType),
+        th.Property("std5", th.StringType),
+        th.Property("std6", th.StringType),
+        th.Property("std7", th.StringType),
+        th.Property("std8", th.StringType),
+        th.Property("std9", th.StringType),
+        th.Property("std10", th.StringType),
+        th.Property("fax", th.StringType),
+        th.Property("username", th.StringType),
+        th.Property("exteventusercd", th.StringType),
+        th.Property("other", th.StringType),
+        th.Property("notes", th.StringType),
+        th.Property("marketingemail", th.StringType),
+        th.Property("eventemail", th.StringType),
+        th.Property("homephone", th.StringType),
+        th.Property("createtimestamp", th.StringType),
+        th.Property("lastactivity", th.StringType),
+        th.Property("browser", th.StringType),
+        th.Property("ipaddress", th.StringType),
+        th.Property("os", th.StringType),
+        th.Property("emailformat", th.StringType),
+        th.Property("engagementprediction", th.StringType),
+        th.Property("userprofileurl", th.StringType),
+        th.Property("campaigncode", th.StringType),
+        th.Property("sourcecampaigncode", th.StringType),
+        th.Property("sourceeventid", th.IntegerType),
+        th.Property("userstatus", th.StringType),
+        th.Property("utmsource", th.StringType),
+        th.Property("utmmedium", th.StringType),
+        th.Property("utmcampaign", th.StringType),
+        th.Property("utmterm", th.StringType),
+        th.Property("utmcontent", th.StringType),
+        th.Property("attendeetype", th.StringType),
+    ).to_dict()
+
+    def __init__(self, tap):
+        super().__init__(tap)
+        self.client = ON24Client(
+            tap.config.get("client_id"),
+            tap.config.get("access_token_key"),
+            tap.config.get("access_token_secret")
+        )
+
+    def get_records(self, context: Optional[dict]) -> Iterable[Dict[str, Any]]:
+        events_stream = self._tap.streams["events"]
+        for event in events_stream.get_records(context):
+            eventid = event["eventid"]
+            items_per_page = int(self.config.get("items_per_page", 100))
+            page_offset = 0
+            import logging
+            import time
+            MAX_RETRIES = 3
+            while True:
+                retries = 0
+                while retries < MAX_RETRIES:
+                    try:
+                        data = self.client.get_registrants(eventid, items_per_page, page_offset)
+                        break
+                    except Exception as e:
+                        # Handle 403 Forbidden
+                        if hasattr(e, 'response') and getattr(e.response, 'status_code', None) == 403:
+                            logging.warning(f"403 Forbidden for event {eventid} page {page_offset}, stopping pagination.")
+                            return
+                        # Handle connection errors
+                        elif 'Connection aborted' in str(e) or 'RemoteDisconnected' in str(e):
+                            retries += 1
+                            logging.warning(f"Connection error for event {eventid} page {page_offset}, retry {retries}/{MAX_RETRIES}.")
+                            time.sleep(2 * retries)
+                        else:
+                            logging.error(f"Unexpected error for event {eventid} page {page_offset}: {e}")
+                            return
+                else:
+                    logging.error(f"Max retries exceeded for event {eventid} page {page_offset}, skipping page.")
+                    break
+                registrants = data.get("registrants", [])
+                if not registrants:
+                    break
+                for registrant in registrants:
+                    registrant["eventid"] = int(eventid)
+                    if "eventuserid" in registrant and registrant["eventuserid"] is not None:
+                        try:
+                            registrant["eventuserid"] = int(registrant["eventuserid"])
+                        except (ValueError, TypeError):
+                            registrant["eventuserid"] = None
+
+                    def cast_ids(obj):
+                        if isinstance(obj, dict):
+                            for k, v in obj.items():
+                                # Cast *_id fields to int
+                                if k.endswith("id") and v is not None:
+                                    try:
+                                        obj[k] = int(v)
+                                    except (ValueError, TypeError):
+                                        obj[k] = None
+                                elif isinstance(v, list):
+                                    for item in v:
+                                        cast_ids(item)
+                                elif isinstance(v, dict):
+                                    cast_ids(v)
+                        elif isinstance(obj, list):
+                            for item in obj:
+                                cast_ids(item)
+
+                    cast_ids(registrant)
+                    yield registrant
+                if len(registrants) < items_per_page:
                     break
                 page_offset += 1
