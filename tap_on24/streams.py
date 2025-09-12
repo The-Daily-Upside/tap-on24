@@ -279,8 +279,7 @@ class ON24AttendeesStream(Stream):
                     # Cast *_id fields to int, preserve pollanswers/surveyanswers as arrays
                     cast_ids(attendee)
                     yield attendee
-                if len(attendees) < items_per_page:
-                    break
+                # Continue paginating until an empty page is returned
                 page_offset += 1
 
 class ON24RegistrantsStream(Stream):
@@ -413,6 +412,5 @@ class ON24RegistrantsStream(Stream):
 
                     cast_ids(registrant)
                     yield registrant
-                if len(registrants) < items_per_page:
-                    break
+                # Continue paginating until an empty page is returned
                 page_offset += 1
