@@ -112,17 +112,10 @@ class ON24EventsStream(Stream):
         start_date = self.config.get("on24_start_date")
         items_per_page = int(self.config.get("items_per_page", 100))
         page_offset = 0
-        boolean_fields = [
-            "isactive", "iseliteexpired", "ishybrideevent", "regrequired", "regnotificationrequired"
-        ]
         while True:
             data = self.client.get_events(start_date, items_per_page, page_offset)
             events = data.get("events", [])
             for event in events:
-                # Normalize boolean-like fields to strings
-                for field in boolean_fields:
-                    if field in event and isinstance(event[field], bool):
-                        event[field] = str(event[field])
                 yield event
             if len(events) < items_per_page:
                 break
