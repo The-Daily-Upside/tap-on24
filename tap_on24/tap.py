@@ -3,9 +3,6 @@
 from singer_sdk import Tap
 from singer_sdk.typing import PropertiesList, Property, StringType, IntegerType, BooleanType
 from tap_on24.streams import ON24EventsStream, ON24AttendeesStream, ON24RegistrantsStream
-import logging
-
-logging.basicConfig(level=logging.DEBUG)
 
 class TapON24(Tap):
     """Singer tap for ON24 Webinar Platform."""
