@@ -13,6 +13,7 @@ class TapON24(Tap):
         Property("access_token_key", StringType, required=True),
         Property("access_token_secret", StringType, required=True),
         Property("on24_start_date", StringType, required=True),
+        Property("on24_end_date", StringType, required=False),
         Property("items_per_page", IntegerType, default=100),
     ).to_dict()
 

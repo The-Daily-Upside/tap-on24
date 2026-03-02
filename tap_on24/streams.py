@@ -151,12 +151,22 @@ class ON24EventsStream(Stream):
         )
 
     def get_records(self, context: Optional[dict]) -> Iterable[Dict[str, Any]]:
+        from datetime import datetime, timezone
         start_date = self.config.get("on24_start_date")
-        # ON24 API rejects itemsPerPage=0; ensure positive value (1-1000)
-        items_per_page = max(1, int(self.config.get("items_per_page", 100)))
+        # ON24 API: itemsPerPage default 100, example 25; use min 10 per docs
+        items_per_page = max(10, int(self.config.get("items_per_page", 100)))
+        # ON24 API: when using startDate, provide endDate; max range 6 months
+        end_date = self.config.get("on24_end_date")
+        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        if start_date:
+            # Cap startDate to today if in future (API rejects future dates)
+            if start_date > today:
+                start_date = today
+            if not end_date:
+                end_date = today
         page_offset = 0
         while True:
-            data = self.client.get_events(start_date, items_per_page, page_offset)
+            data = self.client.get_events(start_date, end_date, items_per_page, page_offset)
             events = data.get("events", [])
             for idx, event in enumerate(events):
                 # Ensure 'lastupdated' is present for replication key
@@ -319,8 +329,8 @@ class ON24AttendeesStream(Stream):
         events_stream = self._tap.streams["events"]
         for event_idx, event in enumerate(events_stream.get_records(context)):
             eventid = event["eventid"]
-            # ON24 API rejects itemsPerPage=0; ensure positive value (1-1000)
-            items_per_page = max(1, int(self.config.get("items_per_page", 100)))
+            # ON24 API: itemsPerPage default 100, example 25; use min 10 per docs
+            items_per_page = max(10, int(self.config.get("items_per_page", 100)))
             page_offset = 0
             total_attendees = None
             while True:
@@ -439,8 +449,8 @@ class ON24RegistrantsStream(Stream):
         events_stream = self._tap.streams["events"]
         for event_idx, event in enumerate(events_stream.get_records(context)):
             eventid = event["eventid"]
-            # ON24 API rejects itemsPerPage=0; ensure positive value (1-1000)
-            items_per_page = max(1, int(self.config.get("items_per_page", 100)))
+            # ON24 API: itemsPerPage default 100, example 25; use min 10 per docs
+            items_per_page = max(10, int(self.config.get("items_per_page", 100)))
             page_offset = 0
             total_registrants = None
             while True:

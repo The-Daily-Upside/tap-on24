@@ -20,8 +20,8 @@ class ON24Client:
     def get_events(self, start_date: Optional[str] = None, end_date: Optional[str] = None,
                    items_per_page: int = 100, page_offset: int = 0) -> Dict[str, Any]:
         import time, logging
-        # ON24 API rejects itemsPerPage=0; clamp to valid range
-        items_per_page = max(1, items_per_page)
+        # ON24 API: itemsPerPage default 100, example 25; min 10 per docs
+        items_per_page = max(10, items_per_page)
         url = self.BASE_URL.format(client_id=self.client_id)
         params = {
             "itemsPerPage": items_per_page,
@@ -29,6 +29,8 @@ class ON24Client:
         }
         if start_date:
             params["startDate"] = start_date
+        if end_date:
+            params["endDate"] = end_date
         MAX_RETRIES = 5
         backoff = 2
         for attempt in range(MAX_RETRIES):
@@ -38,13 +40,15 @@ class ON24Client:
                 time.sleep(backoff)
                 backoff *= 2
                 continue
+            if response.status_code == 400:
+                logging.error(f"[ON24Client] 400 Bad Request: {response.text}")
             response.raise_for_status()
             return response.json()
         raise Exception("Max retries exceeded for events endpoint due to throttling.")
     
     def get_attendees(self, event_id: int, items_per_page: int = 100, page_offset: int = 0) -> Dict[str, Any]:
         import time, logging
-        items_per_page = max(1, items_per_page)
+        items_per_page = max(10, items_per_page)
         url = f"{self.BASE_URL.format(client_id=self.client_id)}/{event_id}/attendee"
         params = {
             "itemsPerPage": items_per_page,
@@ -71,7 +75,7 @@ class ON24Client:
 
     def get_registrants(self, event_id: int, items_per_page: int = 100, page_offset: int = 0) -> Dict[str, Any]:
         import time, logging
-        items_per_page = max(1, items_per_page)
+        items_per_page = max(10, items_per_page)
         url = f"{self.BASE_URL.format(client_id=self.client_id)}/{event_id}/registrant"
         params = {
             "itemsPerPage": items_per_page,
