@@ -20,6 +20,8 @@ class ON24Client:
     def get_events(self, start_date: Optional[str] = None, end_date: Optional[str] = None,
                    items_per_page: int = 100, page_offset: int = 0) -> Dict[str, Any]:
         import time, logging
+        # ON24 API rejects itemsPerPage=0; clamp to valid range
+        items_per_page = max(1, items_per_page)
         url = self.BASE_URL.format(client_id=self.client_id)
         params = {
             "itemsPerPage": items_per_page,
@@ -42,6 +44,7 @@ class ON24Client:
     
     def get_attendees(self, event_id: int, items_per_page: int = 100, page_offset: int = 0) -> Dict[str, Any]:
         import time, logging
+        items_per_page = max(1, items_per_page)
         url = f"{self.BASE_URL.format(client_id=self.client_id)}/{event_id}/attendee"
         params = {
             "itemsPerPage": items_per_page,
@@ -68,6 +71,7 @@ class ON24Client:
 
     def get_registrants(self, event_id: int, items_per_page: int = 100, page_offset: int = 0) -> Dict[str, Any]:
         import time, logging
+        items_per_page = max(1, items_per_page)
         url = f"{self.BASE_URL.format(client_id=self.client_id)}/{event_id}/registrant"
         params = {
             "itemsPerPage": items_per_page,
