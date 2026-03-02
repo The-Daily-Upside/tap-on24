@@ -154,7 +154,7 @@ class ON24EventsStream(Stream):
         from datetime import datetime, timezone
         start_date = self.config.get("on24_start_date")
         # ON24 API: itemsPerPage default 100, example 25; use min 10 per docs
-        items_per_page = max(10, int(self.config.get("items_per_page", 100)))
+        items_per_page = max(10, int(self.config.get("items_per_page") or 100))
         # ON24 API: when using startDate, provide endDate; max range 6 months
         end_date = self.config.get("on24_end_date")
         today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
@@ -330,7 +330,7 @@ class ON24AttendeesStream(Stream):
         for event_idx, event in enumerate(events_stream.get_records(context)):
             eventid = event["eventid"]
             # ON24 API: itemsPerPage default 100, example 25; use min 10 per docs
-            items_per_page = max(10, int(self.config.get("items_per_page", 100)))
+            items_per_page = max(10, int(self.config.get("items_per_page") or 100))
             page_offset = 0
             total_attendees = None
             while True:
@@ -450,7 +450,7 @@ class ON24RegistrantsStream(Stream):
         for event_idx, event in enumerate(events_stream.get_records(context)):
             eventid = event["eventid"]
             # ON24 API: itemsPerPage default 100, example 25; use min 10 per docs
-            items_per_page = max(10, int(self.config.get("items_per_page", 100)))
+            items_per_page = max(10, int(self.config.get("items_per_page") or 100))
             page_offset = 0
             total_registrants = None
             while True:

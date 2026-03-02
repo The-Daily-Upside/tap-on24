@@ -65,13 +65,15 @@ class ON24Client:
                 time.sleep(backoff)
                 backoff *= 2
                 continue
+            if response.status_code == 400:
+                logging.error(f"[ON24Client] 400 Bad Request (attendees): {response.text}")
             response.raise_for_status()
             try:
                 return response.json()
             except Exception as e:
                 logging.error(f"[ON24Client] Failed to parse JSON response: {e}")
                 raise
-        raise Exception(f"Max retries exceeded for registrants endpoint (event {event_id}) due to throttling.")
+        raise Exception(f"Max retries exceeded for attendees endpoint (event {event_id}) due to throttling.")
 
     def get_registrants(self, event_id: int, items_per_page: int = 100, page_offset: int = 0) -> Dict[str, Any]:
         import time, logging
@@ -92,6 +94,8 @@ class ON24Client:
                 time.sleep(backoff)
                 backoff *= 2
                 continue
+            if response.status_code == 400:
+                logging.error(f"[ON24Client] 400 Bad Request (registrants): {response.text}")
             response.raise_for_status()
             try:
                 return response.json()
