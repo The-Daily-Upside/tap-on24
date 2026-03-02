@@ -151,31 +151,52 @@ class ON24EventsStream(Stream):
         )
 
     def get_records(self, context: Optional[dict]) -> Iterable[Dict[str, Any]]:
-        from datetime import datetime, timezone
+        from datetime import datetime, timezone, timedelta
         start_date = self.config.get("on24_start_date")
-        # ON24 API: itemsPerPage default 100, example 25; use min 10 per docs
-        items_per_page = max(10, int(self.config.get("items_per_page") or 100))
-        # ON24 API: when using startDate, provide endDate; max range 6 months
         end_date = self.config.get("on24_end_date")
         today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         if start_date:
-            # Cap startDate to today if in future (API rejects future dates)
             if start_date > today:
                 start_date = today
             if not end_date:
                 end_date = today
-        page_offset = 0
-        while True:
-            data = self.client.get_events(start_date, end_date, items_per_page, page_offset)
-            events = data.get("events", [])
-            for idx, event in enumerate(events):
-                # Ensure 'lastupdated' is present for replication key
-                if "lastupdated" not in event:
-                    event["lastupdated"] = None
-                yield event
-            if len(events) < items_per_page:
+            if end_date < start_date:
+                end_date = start_date
+        items_per_page = max(10, int(self.config.get("items_per_page") or 100))
+        if not start_date:
+            # No dates: API returns past 3 months
+            page_offset = 0
+            while True:
+                data = self.client.get_events(None, None, items_per_page, page_offset)
+                events = data.get("events", [])
+                for event in events:
+                    if "lastupdated" not in event:
+                        event["lastupdated"] = None
+                    yield event
+                if len(events) < items_per_page:
+                    break
+                page_offset += 1
+            return
+        chunk_start, chunk_end = start_date, end_date
+        while chunk_start and chunk_end:
+            start_dt = datetime.strptime(chunk_start, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+            end_dt = datetime.strptime(chunk_end, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+            window_end = chunk_end if (end_dt - start_dt).days <= 180 else (start_dt + timedelta(days=180)).strftime("%Y-%m-%d")
+            page_offset = 0
+            while True:
+                data = self.client.get_events(chunk_start, window_end, items_per_page, page_offset)
+                events = data.get("events", [])
+                for event in events:
+                    if "lastupdated" not in event:
+                        event["lastupdated"] = None
+                    yield event
+                if len(events) < items_per_page:
+                    break
+                page_offset += 1
+            next_start = datetime.strptime(window_end, "%Y-%m-%d").replace(tzinfo=timezone.utc) + timedelta(days=1)
+            if next_start > end_dt:
                 break
-            page_offset += 1
+            chunk_start = next_start.strftime("%Y-%m-%d")
 
 class ON24AttendeesStream(Stream):
     name = "attendees"
